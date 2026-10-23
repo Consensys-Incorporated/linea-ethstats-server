@@ -5,21 +5,35 @@ on:
     branches:
       - master
 
+permissions: {}
+
 jobs:
   releaser:
     runs-on: ubuntu-latest
+    environment: dockerhub
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - name: Set Docker Tag
-        run: echo "DOCKER_TAG=${GITHUB_SHA:0:7}-$(date +%s)" | tee $GITHUB_ENV
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
-        with:
-          username: ${{ secrets.DOCKER_REPO_USER }}
-          password: ${{ secrets.DOCKER_REPO_TOKEN }}
+        run: echo "DOCKER_TAG=${GITHUB_SHA:0:7}-$(date +%s)" | tee "$GITHUB_ENV"
 
       - name: Build Docker Image
         uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
         with:
-          push: true
+          load: true
           tags: consensys/linea-ethstats-server:${{ env.DOCKER_TAG }}
+
+      # Log in only after the build: the base image is pulled anonymously and the
+      # short-lived OIDC token is used for the push alone.
+      - name: Login to Docker Hub
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        env:
+          DOCKERHUB_OIDC_CONNECTIONID: ${{ vars.DOCKERHUB_OIDC_CONNECTIONID }}
+        with:
+          username: consensys
+
+      - name: Push Docker Image
+        env:
+          IMAGE: consensys/linea-ethstats-server:${{ env.DOCKER_TAG }}
+        run: docker push "$IMAGE"
