@@ -5,13 +5,13 @@ on:
     branches:
       - master
 
-permissions: {}
+permissions: {} # lock everything by default (least-privilege)
 
 jobs:
   releaser:
     runs-on: ubuntu-latest
     environment: dockerhub
-    permissions:
+    permissions:  # least-privilege for this job only
       contents: read
       id-token: write
     steps:
