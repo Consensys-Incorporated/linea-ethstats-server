@@ -4,7 +4,7 @@
   "version": "0.2.1",
   "private": true,
   "engines": {
-    "node": "16.17.0",
+    "node": "^24.22.1 || >=26.12.1",
     "npm": "8.15.0"
   },
   "scripts": {
